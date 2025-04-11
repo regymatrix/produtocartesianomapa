@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo do Plano Cartesiano</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .game-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 90%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        
+        .map-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background-color: #f9f9f9;
+            border: 2px solid #3498db;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .cartesian-plane {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .x-axis, .y-axis {
+            position: absolute;
+            background-color: #2c3e50;
+        }
+        
+        .x-axis {
+            height: 2px;
+            width: 100%;
+            bottom: 50%;
+            left: 0;
+        }
+        
+        .y-axis {
+            width: 2px;
+            height: 100%;
+            left: 50%;
+            top: 0;
+        }
+        
+        .grid-line {
+            position: absolute;
+            background-color: #bdc3c7;
+        }
+        
+        .horizontal-grid {
+            height: 1px;
+            width: 100%;
+        }
+        
+        .vertical-grid {
+            width: 1px;
+            height: 100%;
+        }
+        
+        .axis-label {
+            position: absolute;
+            font-size: 12px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .x-label {
+            bottom: 48%;
+        }
+        
+        .y-label {
+            left: 52%;
+        }
+        
+        .origin-label {
+            position: absolute;
+            font-size: 14px;
+            font-weight: bold;
+            color: #e74c3c;
+            left: 50%;
+            bottom: 50%;
+            transform: translate(10px, 10px);
+        }
+        
+        .location {
+            position: absolute;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            transform: translate(-50%, -50%);
+        }
+        
+        .location:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+        
+        .question-container {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .option-btn {
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .option-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .score-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .score, .level {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .name-input {
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            width: 200px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .restart-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .restart-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        .share-btn {
+            background-color: #4CAF50;
+            color: white;
+            display: none;
+        }
+        
+        .share-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .ranking-container {
+            width: 90%;
+            max-width: 600px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .ranking-title {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .ranking-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .ranking-item:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+        
+        .game-over {
+            text-align: center;
+            font-size: 24px;
+            color: #e74c3c;
+            margin: 15px 0;
+            display: none;
+        }
+        
+        @media (max-width: 600px) {
+            .options-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Jogo do Plano Cartesiano</h1>
+    
+    <div class="game-container">
+        <div class="score-container">
+            <div class="score">Pontuação: 0</div>
+            <div class="level">Nível: 1</div>
+        </div>
+        
+        <div class="map-container" id="map">
+            <!-- O plano cartesiano será gerado aqui -->
+        </div>
+        
+        <input type="text" class="name-input" id="playerName" placeholder="Digite seu nome">
+        
+        <div class="question-container">
+            <p id="question">Encontre as coordenadas do local destacado!</p>
+        </div>
+        
+        <div class="options-container" id="options">
+            <!-- As opções serão geradas aqui -->
+        </div>
+        
+        <div class="game-over" id="gameOver">
+            Fim de jogo! Sua pontuação final foi: <span id="finalScore">0</span>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="action-btn restart-btn" id="restartBtn">Jogar Novamente</button>
+            <button class="action-btn share-btn" id="shareBtn">Compartilhar no WhatsApp</button>
+        </div>
+    </div>
+    
+    <div class="ranking-container">
+        <h2 class="ranking-title">Ranking</h2>
+        <ul class="ranking-list" id="rankingList">
+            <!-- O ranking será gerado aqui -->
+        </ul>
+    </div>
+    
+    <script>
+        // Configurações do jogo
+        const config = {
+            gridSize: 5, // Tamanho do grid (de -2 a +2)
+            locations: [
+                { name: "hospital", emoji: "🏥" },
+                { name: "escola", emoji: "🏫" },
+                { name: "restaurante", emoji: "🍴" },
+                { name: "bar", emoji: "🍻" },
+                { name: "farmacia", emoji: "💊" },
+                { name: "cinema", emoji: "🎬" },
+                { name: "parque", emoji: "🌳" },
+                { name: "sorveteria", emoji: "🍦" },
+                { name: "teatro", emoji: "🎭" }
+            ],
+            pointsPerCorrect: 10
+        };
+        
+        // Estado do jogo
+        const gameState = {
+            score: 0,
+            level: 1,
+            currentLocation: null,
+            correctAnswer: null,
+            gameActive: false,
+            playerName: "",
+            locationsPositions: {}
+        };
+        
+        // Ranking
+        let ranking = JSON.parse(localStorage.getItem('cartesianGameRanking')) || [];
+        
+        // Elementos do DOM
+        const mapElement = document.getElementById('map');
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const scoreElement = document.querySelector('.score');
+        const levelElement = document.querySelector('.level');
+        const gameOverElement = document.getElementById('gameOver');
+        const finalScoreElement = document.getElementById('finalScore');
+        const restartBtn = document.getElementById('restartBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const playerNameInput = document.getElementById('playerName');
+        const rankingList = document.getElementById('rankingList');
+        
+        // Inicializar o jogo
+        function initGame() {
+            gameState.score = 0;
+            gameState.level = 1;
+            gameState.gameActive = true;
+            gameState.playerName = playerNameInput.value.trim();
+            
+            updateUI();
+            generateCartesianPlane();
+            placeLocations();
+            
+            // Iniciar automaticamente com o primeiro local
+            const firstLocation = Object.keys(gameState.locationsPositions)[0];
+            gameState.currentLocation = firstLocation;
+            setupQuestion();
+            
+            gameOverElement.style.display = 'none';
+            shareBtn.style.display = 'none';
+        }
+        
+        // Gerar o plano cartesiano
+        function generateCartesianPlane() {
+            mapElement.innerHTML = '';
+            
+            const plane = document.createElement('div');
+            plane.className = 'cartesian-plane';
+            mapElement.appendChild(plane);
+            
+            // Adicionar eixos
+            const xAxis = document.createElement('div');
+            xAxis.className = 'x-axis';
+            plane.appendChild(xAxis);
+            
+            const yAxis = document.createElement('div');
+            yAxis.className = 'y-axis';
+            plane.appendChild(yAxis);
+            
+            // Adicionar label de origem (0,0)
+            const originLabel = document.createElement('div');
+            originLabel.className = 'origin-label';
+            originLabel.textContent = '(0,0)';
+            plane.appendChild(originLabel);
+            
+            const mapWidth = mapElement.offsetWidth;
+            const mapHeight = mapElement.offsetHeight;
+            const cellWidth = mapWidth / (config.gridSize * 2 - 1);
+            const cellHeight = mapHeight / (config.gridSize * 2 - 1);
+            
+            // Adicionar linhas de grade horizontais (eixo Y)
+            for (let i = -config.gridSize + 1; i < config.gridSize; i++) {
+                if (i === 0) continue; // Pular o eixo X
+                
+                const line = document.createElement('div');
+                line.className = 'grid-line horizontal-grid';
+                line.style.bottom = `${50 + i * (100 / (config.gridSize * 2 - 1))}%`;
+                plane.appendChild(line);
+                
+                // Adicionar labels do eixo Y
+                const label = document.createElement('div');
+                label.className = 'axis-label y-label';
+                label.textContent = i;
+                label.style.bottom = `${50 + i * (100 / (config.gridSize * 2 - 1))}%`;
+                plane.appendChild(label);
+            }
+            
+            // Adicionar linhas de grade verticais (eixo X)
+            for (let i = -config.gridSize + 1; i < config.gridSize; i++) {
+                if (i === 0) continue; // Pular o eixo Y
+                
+                const line = document.createElement('div');
+                line.className = 'grid-line vertical-grid';
+                line.style.left = `${50 + i * (100 / (config.gridSize * 2 - 1))}%`;
+                plane.appendChild(line);
+                
+                // Adicionar labels do eixo X
+                const label = document.createElement('div');
+                label.className = 'axis-label x-label';
+                label.textContent = i;
+                label.style.left = `${50 + i * (100 / (config.gridSize * 2 - 1))}%`;
+                plane.appendChild(label);
+            }
+        }
+        
+        // Posicionar os locais no mapa
+        function placeLocations() {
+            gameState.locationsPositions = {};
+            const usedPositions = new Set();
+            
+            const mapWidth = mapElement.offsetWidth;
+            const mapHeight = mapElement.offsetHeight;
+            
+            // Selecionar 5 locais aleatórios para este jogo
+            const shuffledLocations = [...config.locations].sort(() => 0.5 - Math.random());
+            const selectedLocations = shuffledLocations.slice(0, 5);
+            
+            selectedLocations.forEach(location => {
+                let x, y;
+                let positionKey;
+                
+                // Garantir que não haja posições duplicadas e que não seja (0,0)
+                do {
+                    x = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
+                    y = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
+                    positionKey = `${x},${y}`;
+                } while (usedPositions.has(positionKey) || (x === 0 && y === 0));
+                
+                usedPositions.add(positionKey);
+                
+                // Armazenar a posição do local
+                gameState.locationsPositions[location.name] = { x, y };
+                
+                // Criar elemento do local no mapa
+                const locationElement = document.createElement('div');
+                locationElement.className = 'location';
+                locationElement.dataset.name = location.name;
+                locationElement.textContent = location.emoji;
+                
+                // Posicionar no plano cartesiano
+                const posX = 50 + x * (100 / (config.gridSize * 2 - 1));
+                const posY = 50 - y * (100 / (config.gridSize * 2 - 1));
+                
+                locationElement.style.left = `${posX}%`;
+                locationElement.style.top = `${posY}%`;
+                
+                // Adicionar evento de clique
+                locationElement.addEventListener('click', () => {
+                    if (gameState.gameActive) {
+                        gameState.currentLocation = location.name;
+                        setupQuestion();
+                    }
+                });
+                
+                mapElement.querySelector('.cartesian-plane').appendChild(locationElement);
+            });
+        }
+        
+        // Configurar pergunta
+        function setupQuestion() {
+            if (!gameState.currentLocation) return;
+            
+            const location = gameState.locationsPositions[gameState.currentLocation];
+            const correctX = location.x;
+            const correctY = location.y;
+            
+            // Definir a resposta correta
+            gameState.correctAnswer = { x: correctX, y: correctY };
+            
+            // Atualizar a pergunta
+            const locationEmoji = config.locations.find(l => l.name === gameState.currentLocation).emoji;
+            questionElement.textContent = `Quais são as coordenadas do ${gameState.currentLocation} ${locationEmoji}?`;
+            
+            // Gerar opções de resposta
+            generateOptions(correctX, correctY);
+        }
+        
+        // Gerar opções de resposta
+        function generateOptions(correctX, correctY) {
+            optionsElement.innerHTML = '';
+            
+            // Criar a resposta correta e algumas incorretas
+            const options = [
+                { x: correctX, y: correctY, isCorrect: true }
+            ];
+            
+            // Adicionar opções incorretas
+            while (options.length < 4) {
+                let x, y;
+                
+                // Garantir que as opções incorretas sejam diferentes da correta e não se repitam
+                do {
+                    x = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
+                    y = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
+                } while (
+                    (x === correctX && y === correctY) ||
+                    options.some(opt => opt.x === x && opt.y === y) ||
+                    (x === 0 && y === 0)
+                );
+                
+                options.push({ x, y, isCorrect: false });
+            }
+            
+            // Embaralhar as opções
+            const shuffledOptions = options.sort(() => 0.5 - Math.random());
+            
+            // Criar botões para cada opção
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = `(${option.x}, ${option.y})`;
+                
+                button.addEventListener('click', () => {
+                    checkAnswer(option.isCorrect);
+                });
+                
+                optionsElement.appendChild(button);
+            });
+        }
+        
+        // Verificar resposta
+        function checkAnswer(isCorrect) {
+            if (!gameState.gameActive) return;
+            
+            if (isCorrect) {
+                gameState.score += config.pointsPerCorrect;
+                gameState.level += 1;
+                updateUI();
+                
+                // Verificar se ainda há locais para perguntar
+                const remainingLocations = Object.keys(gameState.locationsPositions)
+                    .filter(name => name !== gameState.currentLocation);
+                
+                if (remainingLocations.length > 0) {
+                    gameState.currentLocation = remainingLocations[0];
+                    setupQuestion();
+                } else {
+                    endGame(true);
+                }
+            } else {
+                endGame(false);
+            }
+        }
+        
+        // Finalizar o jogo
+        function endGame(isWin) {
+            gameState.gameActive = false;
+            
+            if (isWin) {
+                questionElement.textContent = "Parabéns! Você acertou todas as coordenadas!";
+            } else {
+                questionElement.textContent = `Você errou! As coordenadas corretas eram (${gameState.correctAnswer.x}, ${gameState.correctAnswer.y}).`;
+            }
+            
+            gameOverElement.style.display = 'block';
+            finalScoreElement.textContent = gameState.score;
+            
+            // Mostrar botão de compartilhar se o jogador colocou o nome
+            if (gameState.playerName) {
+                shareBtn.style.display = 'inline-block';
+            }
+            
+            // Atualizar ranking
+            updateRanking();
+        }
+        
+        // Atualizar ranking
+        function updateRanking() {
+            if (!gameState.playerName) return;
+            
+            // Adicionar ao ranking
+            ranking.push({
+                name: gameState.playerName,
+                score: gameState.score,
+                date: new Date().toLocaleDateString()
+            });
+            
+            // Ordenar por pontuação (maior primeiro)
+            ranking.sort((a, b) => b.score - a.score);
+            
+            // Manter apenas os top 10
+            if (ranking.length > 10) {
+                ranking = ranking.slice(0, 10);
+            }
+            
+            // Salvar no localStorage
+            localStorage.setItem('cartesianGameRanking', JSON.stringify(ranking));
+            
+            // Atualizar a exibição do ranking
+            displayRanking();
+        }
+        
+        // Exibir ranking
+        function displayRanking() {
+            rankingList.innerHTML = '';
+            
+            if (ranking.length === 0) {
+                const item = document.createElement('li');
+                item.className = 'ranking-item';
+                item.textContent = "Nenhum registro ainda. Jogue para aparecer aqui!";
+                rankingList.appendChild(item);
+                return;
+            }
+            
+            ranking.forEach((entry, index) => {
+                const item = document.createElement('li');
+                item.className = 'ranking-item';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = `${index + 1}. ${entry.name}`;
+                
+                const scoreSpan = document.createElement('span');
+                scoreSpan.textContent = `${entry.score} pontos (${entry.date})`;
+                
+                item.appendChild(nameSpan);
+                item.appendChild(scoreSpan);
+                rankingList.appendChild(item);
+            });
+        }
+        
+        // Atualizar interface
+        function updateUI() {
+            scoreElement.textContent = `Pontuação: ${gameState.score}`;
+            levelElement.textContent = `Nível: ${gameState.level}`;
+        }
+        
+        // Event listeners
+        restartBtn.addEventListener('click', initGame);
+        
+        shareBtn.addEventListener('click', () => {
+            if (!gameState.playerName) return;
+            
+            const shareText = `Eu marquei ${gameState.score} pontos no Jogo do Plano Cartesiano! Tente bater minha pontuação!`;
+            const shareUrl = window.location.href;
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
+            
+            window.open(whatsappUrl, '_blank');
+        });
+        
+        // Inicializar o jogo quando a página carregar
+        window.addEventListener('load', () => {
+            displayRanking();
+            initGame(); // Inicia automaticamente o jogo
+        });
+    </script>
+</body>
+</html>
