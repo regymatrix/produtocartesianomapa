@@ -55,9 +55,8 @@
         .x-axis {
             height: 2px;
             width: 100%;
-            top: 50%;
+            bottom: 50%;
             left: 0;
-            transform: translateY(-50%);
         }
         
         .y-axis {
@@ -65,7 +64,6 @@
             height: 100%;
             left: 50%;
             top: 0;
-            transform: translateX(-50%);
         }
         
         .grid-line {
@@ -91,13 +89,11 @@
         }
         
         .x-label {
-            top: 50%;
-            transform: translateY(-50%);
+            bottom: 48%;
         }
         
         .y-label {
-            left: 50%;
-            transform: translateX(-50%);
+            left: 52%;
         }
         
         .origin-label {
@@ -106,8 +102,8 @@
             font-weight: bold;
             color: #e74c3c;
             left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
+            bottom: 50%;
+            transform: translate(10px, 10px);
         }
         
         .location {
@@ -127,16 +123,6 @@
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 15px;
-            position: relative;
-        }
-        
-        .timer {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-weight: bold;
-            color: #e74c3c;
         }
         
         .options-container {
@@ -186,7 +172,6 @@
             justify-content: center;
             gap: 10px;
             margin-top: 10px;
-            flex-wrap: wrap;
         }
         
         .action-btn {
@@ -215,21 +200,6 @@
         
         .share-btn:hover {
             background-color: #45a049;
-        }
-        
-        .save-btn {
-            background-color: #3498db;
-            color: white;
-            display: none;
-        }
-        
-        .save-btn:hover {
-            background-color: #2980b9;
-        }
-        
-        .action-btn:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
         }
         
         .ranking-container {
@@ -295,7 +265,6 @@
         
         <div class="question-container">
             <p id="question">Encontre as coordenadas do local destacado!</p>
-            <div class="timer" id="timer">30s</div>
         </div>
         
         <div class="options-container" id="options">
@@ -308,8 +277,7 @@
         
         <div class="action-buttons">
             <button class="action-btn restart-btn" id="restartBtn">Jogar Novamente</button>
-            <button class="action-btn share-btn" id="shareBtn" disabled>Compartilhar no WhatsApp</button>
-            <button class="action-btn save-btn" id="saveBtn" disabled>Salvar Pontuação</button>
+            <button class="action-btn share-btn" id="shareBtn">Compartilhar no WhatsApp</button>
         </div>
     </div>
     
@@ -324,8 +292,6 @@
         // Configurações do jogo
         const config = {
             gridSize: 5, // Tamanho do grid (de -2 a +2)
-            pointsPerCorrect: 10,
-            locationsPerGame: 10, // Quantidade de locais por jogo
             locations: [
                 { name: "hospital", emoji: "🏥" },
                 { name: "escola", emoji: "🏫" },
@@ -335,24 +301,9 @@
                 { name: "cinema", emoji: "🎬" },
                 { name: "parque", emoji: "🌳" },
                 { name: "sorveteria", emoji: "🍦" },
-                { name: "teatro", emoji: "🎭" },
-                { name: "biblioteca", emoji: "📚" },
-                { name: "shopping", emoji: "🛍️" },
-                { name: "aeroporto", emoji: "✈️" },
-                { name: "praia", emoji: "🏖️" },
-                { name: "museu", emoji: "🏛️" },
-                { name: "estádio", emoji: "🏟️" },
-                { name: "supermercado", emoji: "🛒" },
-                { name: "padaria", emoji: "🥖" },
-                { name: "pet shop", emoji: "🐶" },
-                { name: "floricultura", emoji: "🌸" },
-                { name: "igreja", emoji: "⛪" }
+                { name: "teatro", emoji: "🎭" }
             ],
-            timeLimits: {
-                1: 30,   // Níveis 1-10: 30 segundos
-                11: 15,  // Níveis 11-15: 15 segundos
-                16: 10   // Níveis 16+: 10 segundos
-            }
+            pointsPerCorrect: 10
         };
         
         // Estado do jogo
@@ -363,10 +314,7 @@
             correctAnswer: null,
             gameActive: false,
             playerName: "",
-            locationsPositions: {},
-            timer: null,
-            timeLeft: 0,
-            usedCoordinates: new Set() // Para evitar repetição de coordenadas
+            locationsPositions: {}
         };
         
         // Ranking
@@ -382,10 +330,8 @@
         const finalScoreElement = document.getElementById('finalScore');
         const restartBtn = document.getElementById('restartBtn');
         const shareBtn = document.getElementById('shareBtn');
-        const saveBtn = document.getElementById('saveBtn');
         const playerNameInput = document.getElementById('playerName');
         const rankingList = document.getElementById('rankingList');
-        const timerElement = document.getElementById('timer');
         
         // Inicializar o jogo
         function initGame() {
@@ -393,19 +339,8 @@
             gameState.level = 1;
             gameState.gameActive = true;
             gameState.playerName = playerNameInput.value.trim();
-            gameState.usedCoordinates.clear();
             
             updateUI();
-            generateNewRound();
-            
-            gameOverElement.style.display = 'none';
-            shareBtn.style.display = 'inline-block';
-            saveBtn.style.display = 'inline-block';
-            updateButtonsState();
-        }
-        
-        // Gerar nova rodada (com novos locais)
-        function generateNewRound() {
             generateCartesianPlane();
             placeLocations();
             
@@ -413,6 +348,9 @@
             const firstLocation = Object.keys(gameState.locationsPositions)[0];
             gameState.currentLocation = firstLocation;
             setupQuestion();
+            
+            gameOverElement.style.display = 'none';
+            shareBtn.style.display = 'none';
         }
         
         // Gerar o plano cartesiano
@@ -449,14 +387,14 @@
                 
                 const line = document.createElement('div');
                 line.className = 'grid-line horizontal-grid';
-                line.style.top = `${50 - i * (100 / (config.gridSize * 2 - 1))}%`;
+                line.style.bottom = `${50 + i * (100 / (config.gridSize * 2 - 1))}%`;
                 plane.appendChild(line);
                 
                 // Adicionar labels do eixo Y
                 const label = document.createElement('div');
                 label.className = 'axis-label y-label';
                 label.textContent = i;
-                label.style.top = `${50 - i * (100 / (config.gridSize * 2 - 1))}%`;
+                label.style.bottom = `${50 + i * (100 / (config.gridSize * 2 - 1))}%`;
                 plane.appendChild(label);
             }
             
@@ -481,11 +419,14 @@
         // Posicionar os locais no mapa
         function placeLocations() {
             gameState.locationsPositions = {};
-            gameState.usedCoordinates.clear();
+            const usedPositions = new Set();
             
-            // Selecionar locais aleatórios para este jogo
+            const mapWidth = mapElement.offsetWidth;
+            const mapHeight = mapElement.offsetHeight;
+            
+            // Selecionar 5 locais aleatórios para este jogo
             const shuffledLocations = [...config.locations].sort(() => 0.5 - Math.random());
-            const selectedLocations = shuffledLocations.slice(0, config.locationsPerGame);
+            const selectedLocations = shuffledLocations.slice(0, 5);
             
             selectedLocations.forEach(location => {
                 let x, y;
@@ -496,12 +437,9 @@
                     x = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
                     y = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
                     positionKey = `${x},${y}`;
-                } while (
-                    gameState.usedCoordinates.has(positionKey) || 
-                    (x === 0 && y === 0)
-                );
+                } while (usedPositions.has(positionKey) || (x === 0 && y === 0));
                 
-                gameState.usedCoordinates.add(positionKey);
+                usedPositions.add(positionKey);
                 
                 // Armazenar a posição do local
                 gameState.locationsPositions[location.name] = { x, y };
@@ -535,11 +473,6 @@
         function setupQuestion() {
             if (!gameState.currentLocation) return;
             
-            // Limpar timer anterior
-            if (gameState.timer) {
-                clearInterval(gameState.timer);
-            }
-            
             const location = gameState.locationsPositions[gameState.currentLocation];
             const correctX = location.x;
             const correctY = location.y;
@@ -549,48 +482,10 @@
             
             // Atualizar a pergunta
             const locationEmoji = config.locations.find(l => l.name === gameState.currentLocation).emoji;
-            questionElement.innerHTML = `Quais são as coordenadas do ${gameState.currentLocation} ${locationEmoji}?`;
-            
-            // Definir tempo limite baseado no nível
-            let timeLimit = 30;
-            if (gameState.level >= 16) {
-                timeLimit = config.timeLimits[16];
-            } else if (gameState.level >= 11) {
-                timeLimit = config.timeLimits[11];
-            } else {
-                timeLimit = config.timeLimits[1];
-            }
-            
-            gameState.timeLeft = timeLimit;
-            updateTimerDisplay();
-            
-            // Iniciar contagem regressiva
-            gameState.timer = setInterval(() => {
-                gameState.timeLeft--;
-                updateTimerDisplay();
-                
-                if (gameState.timeLeft <= 0) {
-                    clearInterval(gameState.timer);
-                    endGame(false, "Tempo esgotado!");
-                }
-            }, 1000);
+            questionElement.textContent = `Quais são as coordenadas do ${gameState.currentLocation} ${locationEmoji}?`;
             
             // Gerar opções de resposta
             generateOptions(correctX, correctY);
-        }
-        
-        // Atualizar display do timer
-        function updateTimerDisplay() {
-            timerElement.textContent = `${gameState.timeLeft}s`;
-            
-            // Mudar cor conforme o tempo diminui
-            if (gameState.timeLeft <= 5) {
-                timerElement.style.color = '#e74c3c';
-            } else if (gameState.timeLeft <= 10) {
-                timerElement.style.color = '#f39c12';
-            } else {
-                timerElement.style.color = '#2c3e50';
-            }
         }
         
         // Gerar opções de resposta
@@ -605,18 +500,15 @@
             // Adicionar opções incorretas
             while (options.length < 4) {
                 let x, y;
-                let positionKey;
                 
                 // Garantir que as opções incorretas sejam diferentes da correta e não se repitam
                 do {
                     x = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
                     y = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
-                    positionKey = `${x},${y}`;
                 } while (
                     (x === correctX && y === correctY) ||
                     options.some(opt => opt.x === x && opt.y === y) ||
-                    (x === 0 && y === 0) ||
-                    gameState.usedCoordinates.has(positionKey)
+                    (x === 0 && y === 0)
                 );
                 
                 options.push({ x, y, isCorrect: false });
@@ -632,9 +524,6 @@
                 button.textContent = `(${option.x}, ${option.y})`;
                 
                 button.addEventListener('click', () => {
-                    if (gameState.timer) {
-                        clearInterval(gameState.timer);
-                    }
                     checkAnswer(option.isCorrect);
                 });
                 
@@ -651,40 +540,41 @@
                 gameState.level += 1;
                 updateUI();
                 
-                // Gerar novo mapa com novos locais
-                generateNewRound();
+                // Verificar se ainda há locais para perguntar
+                const remainingLocations = Object.keys(gameState.locationsPositions)
+                    .filter(name => name !== gameState.currentLocation);
+                
+                if (remainingLocations.length > 0) {
+                    gameState.currentLocation = remainingLocations[0];
+                    setupQuestion();
+                } else {
+                    endGame(true);
+                }
             } else {
                 endGame(false);
             }
         }
         
         // Finalizar o jogo
-        function endGame(isWin, message = "") {
+        function endGame(isWin) {
             gameState.gameActive = false;
             
             if (isWin) {
                 questionElement.textContent = "Parabéns! Você acertou todas as coordenadas!";
             } else {
-                questionElement.innerHTML = message || `Você errou! As coordenadas corretas eram (${gameState.correctAnswer.x}, ${gameState.correctAnswer.y}).`;
+                questionElement.textContent = `Você errou! As coordenadas corretas eram (${gameState.correctAnswer.x}, ${gameState.correctAnswer.y}).`;
             }
             
             gameOverElement.style.display = 'block';
             finalScoreElement.textContent = gameState.score;
             
-            // Mostrar botões de ação
-            shareBtn.style.display = 'inline-block';
-            saveBtn.style.display = 'inline-block';
-            updateButtonsState();
+            // Mostrar botão de compartilhar se o jogador colocou o nome
+            if (gameState.playerName) {
+                shareBtn.style.display = 'inline-block';
+            }
             
             // Atualizar ranking
             updateRanking();
-        }
-        
-        // Atualizar estado dos botões
-        function updateButtonsState() {
-            const hasName = !!gameState.playerName;
-            shareBtn.disabled = !hasName;
-            saveBtn.disabled = !hasName;
         }
         
         // Atualizar ranking
@@ -758,19 +648,6 @@
             const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`;
             
             window.open(whatsappUrl, '_blank');
-        });
-        
-        saveBtn.addEventListener('click', () => {
-            if (!gameState.playerName) return;
-            
-            // Atualizar ranking (já é feito no endGame)
-            updateRanking();
-            alert('Pontuação salva com sucesso!');
-        });
-        
-        playerNameInput.addEventListener('input', () => {
-            gameState.playerName = playerNameInput.value.trim();
-            updateButtonsState();
         });
         
         // Inicializar o jogo quando a página carregar

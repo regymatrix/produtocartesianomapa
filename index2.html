@@ -186,7 +186,6 @@
             justify-content: center;
             gap: 10px;
             margin-top: 10px;
-            flex-wrap: wrap;
         }
         
         .action-btn {
@@ -217,17 +216,7 @@
             background-color: #45a049;
         }
         
-        .save-btn {
-            background-color: #3498db;
-            color: white;
-            display: none;
-        }
-        
-        .save-btn:hover {
-            background-color: #2980b9;
-        }
-        
-        .action-btn:disabled {
+        .share-btn:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
@@ -309,7 +298,6 @@
         <div class="action-buttons">
             <button class="action-btn restart-btn" id="restartBtn">Jogar Novamente</button>
             <button class="action-btn share-btn" id="shareBtn" disabled>Compartilhar no WhatsApp</button>
-            <button class="action-btn save-btn" id="saveBtn" disabled>Salvar Pontuação</button>
         </div>
     </div>
     
@@ -325,7 +313,6 @@
         const config = {
             gridSize: 5, // Tamanho do grid (de -2 a +2)
             pointsPerCorrect: 10,
-            locationsPerGame: 10, // Quantidade de locais por jogo
             locations: [
                 { name: "hospital", emoji: "🏥" },
                 { name: "escola", emoji: "🏫" },
@@ -365,8 +352,7 @@
             playerName: "",
             locationsPositions: {},
             timer: null,
-            timeLeft: 0,
-            usedCoordinates: new Set() // Para evitar repetição de coordenadas
+            timeLeft: 0
         };
         
         // Ranking
@@ -382,7 +368,6 @@
         const finalScoreElement = document.getElementById('finalScore');
         const restartBtn = document.getElementById('restartBtn');
         const shareBtn = document.getElementById('shareBtn');
-        const saveBtn = document.getElementById('saveBtn');
         const playerNameInput = document.getElementById('playerName');
         const rankingList = document.getElementById('rankingList');
         const timerElement = document.getElementById('timer');
@@ -393,19 +378,8 @@
             gameState.level = 1;
             gameState.gameActive = true;
             gameState.playerName = playerNameInput.value.trim();
-            gameState.usedCoordinates.clear();
             
             updateUI();
-            generateNewRound();
-            
-            gameOverElement.style.display = 'none';
-            shareBtn.style.display = 'inline-block';
-            saveBtn.style.display = 'inline-block';
-            updateButtonsState();
-        }
-        
-        // Gerar nova rodada (com novos locais)
-        function generateNewRound() {
             generateCartesianPlane();
             placeLocations();
             
@@ -413,124 +387,128 @@
             const firstLocation = Object.keys(gameState.locationsPositions)[0];
             gameState.currentLocation = firstLocation;
             setupQuestion();
+            
+            gameOverElement.style.display = 'none';
+            shareBtn.style.display = 'inline-block';
+            updateShareButtonState();
         }
         
         // Gerar o plano cartesiano
         function generateCartesianPlane() {
-            mapElement.innerHTML = '';
-            
-            const plane = document.createElement('div');
-            plane.className = 'cartesian-plane';
-            mapElement.appendChild(plane);
-            
-            // Adicionar eixos
-            const xAxis = document.createElement('div');
-            xAxis.className = 'x-axis';
-            plane.appendChild(xAxis);
-            
-            const yAxis = document.createElement('div');
-            yAxis.className = 'y-axis';
-            plane.appendChild(yAxis);
-            
-            // Adicionar label de origem (0,0)
-            const originLabel = document.createElement('div');
-            originLabel.className = 'origin-label';
-            originLabel.textContent = '(0,0)';
-            plane.appendChild(originLabel);
-            
-            const mapWidth = mapElement.offsetWidth;
-            const mapHeight = mapElement.offsetHeight;
-            const cellWidth = mapWidth / (config.gridSize * 2 - 1);
-            const cellHeight = mapHeight / (config.gridSize * 2 - 1);
-            
-            // Adicionar linhas de grade horizontais (eixo Y)
-            for (let i = -config.gridSize + 1; i < config.gridSize; i++) {
-                if (i === 0) continue; // Pular o eixo X
-                
-                const line = document.createElement('div');
-                line.className = 'grid-line horizontal-grid';
-                line.style.top = `${50 - i * (100 / (config.gridSize * 2 - 1))}%`;
-                plane.appendChild(line);
-                
-                // Adicionar labels do eixo Y
-                const label = document.createElement('div');
-                label.className = 'axis-label y-label';
-                label.textContent = i;
-                label.style.top = `${50 - i * (100 / (config.gridSize * 2 - 1))}%`;
-                plane.appendChild(label);
-            }
-            
-            // Adicionar linhas de grade verticais (eixo X)
-            for (let i = -config.gridSize + 1; i < config.gridSize; i++) {
-                if (i === 0) continue; // Pular o eixo Y
-                
-                const line = document.createElement('div');
-                line.className = 'grid-line vertical-grid';
-                line.style.left = `${50 + i * (100 / (config.gridSize * 2 - 1))}%`;
-                plane.appendChild(line);
-                
-                // Adicionar labels do eixo X
-                const label = document.createElement('div');
-                label.className = 'axis-label x-label';
-                label.textContent = i;
-                label.style.left = `${50 + i * (100 / (config.gridSize * 2 - 1))}%`;
-                plane.appendChild(label);
-            }
-        }
+    mapElement.innerHTML = '';
+    
+    const plane = document.createElement('div');
+    plane.className = 'cartesian-plane';
+    mapElement.appendChild(plane);
+    
+    // Adicionar eixos
+    const xAxis = document.createElement('div');
+    xAxis.className = 'x-axis';
+    plane.appendChild(xAxis);
+    
+    const yAxis = document.createElement('div');
+    yAxis.className = 'y-axis';
+    plane.appendChild(yAxis);
+    
+    // Adicionar label de origem (0,0)
+    const originLabel = document.createElement('div');
+    originLabel.className = 'origin-label';
+    originLabel.textContent = '(0,0)';
+    plane.appendChild(originLabel);
+    
+    const mapWidth = mapElement.offsetWidth;
+    const mapHeight = mapElement.offsetHeight;
+    const cellWidth = mapWidth / (config.gridSize * 2 - 1);
+    const cellHeight = mapHeight / (config.gridSize * 2 - 1);
+    
+    // Adicionar linhas de grade horizontais (eixo Y)
+    for (let i = -config.gridSize + 1; i < config.gridSize; i++) {
+        if (i === 0) continue; // Pular o eixo X
         
+        const line = document.createElement('div');
+        line.className = 'grid-line horizontal-grid';
+        // CORREÇÃO: Invertemos o cálculo da posição Y
+        line.style.top = `${50 - i * (100 / (config.gridSize * 2 - 1))}%`;
+        plane.appendChild(line);
+        
+        // Adicionar labels do eixo Y
+        const label = document.createElement('div');
+        label.className = 'axis-label y-label';
+        label.textContent = i;
+        // CORREÇÃO: Invertemos o cálculo da posição Y
+        label.style.top = `${50 - i * (100 / (config.gridSize * 2 - 1))}%`;
+        plane.appendChild(label);
+    }
+    
+    // Adicionar linhas de grade verticais (eixo X)
+    for (let i = -config.gridSize + 1; i < config.gridSize; i++) {
+        if (i === 0) continue; // Pular o eixo Y
+        
+        const line = document.createElement('div');
+        line.className = 'grid-line vertical-grid';
+        line.style.left = `${50 + i * (100 / (config.gridSize * 2 - 1))}%`;
+        plane.appendChild(line);
+        
+        // Adicionar labels do eixo X
+        const label = document.createElement('div');
+        label.className = 'axis-label x-label';
+        label.textContent = i;
+        label.style.left = `${50 + i * (100 / (config.gridSize * 2 - 1))}%`;
+        plane.appendChild(label);
+    }
+}
+
         // Posicionar os locais no mapa
         function placeLocations() {
-            gameState.locationsPositions = {};
-            gameState.usedCoordinates.clear();
-            
-            // Selecionar locais aleatórios para este jogo
-            const shuffledLocations = [...config.locations].sort(() => 0.5 - Math.random());
-            const selectedLocations = shuffledLocations.slice(0, config.locationsPerGame);
-            
-            selectedLocations.forEach(location => {
-                let x, y;
-                let positionKey;
-                
-                // Garantir que não haja posições duplicadas e que não seja (0,0)
-                do {
-                    x = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
-                    y = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
-                    positionKey = `${x},${y}`;
-                } while (
-                    gameState.usedCoordinates.has(positionKey) || 
-                    (x === 0 && y === 0)
-                );
-                
-                gameState.usedCoordinates.add(positionKey);
-                
-                // Armazenar a posição do local
-                gameState.locationsPositions[location.name] = { x, y };
-                
-                // Criar elemento do local no mapa
-                const locationElement = document.createElement('div');
-                locationElement.className = 'location';
-                locationElement.dataset.name = location.name;
-                locationElement.textContent = location.emoji;
-                
-                // Posicionar no plano cartesiano
-                const posX = 50 + x * (100 / (config.gridSize * 2 - 1));
-                const posY = 50 - y * (100 / (config.gridSize * 2 - 1));
-                
-                locationElement.style.left = `${posX}%`;
-                locationElement.style.top = `${posY}%`;
-                
-                // Adicionar evento de clique
-                locationElement.addEventListener('click', () => {
-                    if (gameState.gameActive) {
-                        gameState.currentLocation = location.name;
-                        setupQuestion();
-                    }
-                });
-                
-                mapElement.querySelector('.cartesian-plane').appendChild(locationElement);
-            });
-        }
+    gameState.locationsPositions = {};
+    const usedPositions = new Set();
+    
+    // Selecionar 8 locais aleatórios para este jogo
+    const shuffledLocations = [...config.locations].sort(() => 0.5 - Math.random());
+    const selectedLocations = shuffledLocations.slice(0, 8);
+    
+    selectedLocations.forEach(location => {
+        let x, y;
+        let positionKey;
         
+        // Garantir que não haja posições duplicadas e que não seja (0,0)
+        do {
+            x = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
+            y = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
+            positionKey = `${x},${y}`;
+        } while (usedPositions.has(positionKey) || (x === 0 && y === 0));
+        
+        usedPositions.add(positionKey);
+        
+        // Armazenar a posição do local
+        gameState.locationsPositions[location.name] = { x, y };
+        
+        // Criar elemento do local no mapa
+        const locationElement = document.createElement('div');
+        locationElement.className = 'location';
+        locationElement.dataset.name = location.name;
+        locationElement.textContent = location.emoji;
+        
+        // Posicionar no plano cartesiano
+        // CORREÇÃO: Invertemos o cálculo da posição Y
+        const posX = 50 + x * (100 / (config.gridSize * 2 - 1));
+        const posY = 50 - y * (100 / (config.gridSize * 2 - 1));
+        
+        locationElement.style.left = `${posX}%`;
+        locationElement.style.top = `${posY}%`;
+        
+        // Adicionar evento de clique
+        locationElement.addEventListener('click', () => {
+            if (gameState.gameActive) {
+                gameState.currentLocation = location.name;
+                setupQuestion();
+            }
+        });
+        
+        mapElement.querySelector('.cartesian-plane').appendChild(locationElement);
+    });
+}
+
         // Configurar pergunta
         function setupQuestion() {
             if (!gameState.currentLocation) return;
@@ -605,18 +583,15 @@
             // Adicionar opções incorretas
             while (options.length < 4) {
                 let x, y;
-                let positionKey;
                 
                 // Garantir que as opções incorretas sejam diferentes da correta e não se repitam
                 do {
                     x = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
                     y = Math.floor(Math.random() * (config.gridSize * 2 - 1)) - config.gridSize + 1;
-                    positionKey = `${x},${y}`;
                 } while (
                     (x === correctX && y === correctY) ||
                     options.some(opt => opt.x === x && opt.y === y) ||
-                    (x === 0 && y === 0) ||
-                    gameState.usedCoordinates.has(positionKey)
+                    (x === 0 && y === 0)
                 );
                 
                 options.push({ x, y, isCorrect: false });
@@ -651,8 +626,16 @@
                 gameState.level += 1;
                 updateUI();
                 
-                // Gerar novo mapa com novos locais
-                generateNewRound();
+                // Verificar se ainda há locais para perguntar
+                const remainingLocations = Object.keys(gameState.locationsPositions)
+                    .filter(name => name !== gameState.currentLocation);
+                
+                if (remainingLocations.length > 0) {
+                    gameState.currentLocation = remainingLocations[0];
+                    setupQuestion();
+                } else {
+                    endGame(true);
+                }
             } else {
                 endGame(false);
             }
@@ -671,20 +654,17 @@
             gameOverElement.style.display = 'block';
             finalScoreElement.textContent = gameState.score;
             
-            // Mostrar botões de ação
+            // Mostrar botão de compartilhar
             shareBtn.style.display = 'inline-block';
-            saveBtn.style.display = 'inline-block';
-            updateButtonsState();
+            updateShareButtonState();
             
             // Atualizar ranking
             updateRanking();
         }
         
-        // Atualizar estado dos botões
-        function updateButtonsState() {
-            const hasName = !!gameState.playerName;
-            shareBtn.disabled = !hasName;
-            saveBtn.disabled = !hasName;
+        // Atualizar estado do botão de compartilhar
+        function updateShareButtonState() {
+            shareBtn.disabled = !gameState.playerName;
         }
         
         // Atualizar ranking
@@ -760,17 +740,9 @@
             window.open(whatsappUrl, '_blank');
         });
         
-        saveBtn.addEventListener('click', () => {
-            if (!gameState.playerName) return;
-            
-            // Atualizar ranking (já é feito no endGame)
-            updateRanking();
-            alert('Pontuação salva com sucesso!');
-        });
-        
         playerNameInput.addEventListener('input', () => {
             gameState.playerName = playerNameInput.value.trim();
-            updateButtonsState();
+            updateShareButtonState();
         });
         
         // Inicializar o jogo quando a página carregar

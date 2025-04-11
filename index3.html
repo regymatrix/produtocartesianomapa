@@ -186,7 +186,6 @@
             justify-content: center;
             gap: 10px;
             margin-top: 10px;
-            flex-wrap: wrap;
         }
         
         .action-btn {
@@ -217,17 +216,7 @@
             background-color: #45a049;
         }
         
-        .save-btn {
-            background-color: #3498db;
-            color: white;
-            display: none;
-        }
-        
-        .save-btn:hover {
-            background-color: #2980b9;
-        }
-        
-        .action-btn:disabled {
+        .share-btn:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
@@ -309,7 +298,6 @@
         <div class="action-buttons">
             <button class="action-btn restart-btn" id="restartBtn">Jogar Novamente</button>
             <button class="action-btn share-btn" id="shareBtn" disabled>Compartilhar no WhatsApp</button>
-            <button class="action-btn save-btn" id="saveBtn" disabled>Salvar Pontuação</button>
         </div>
     </div>
     
@@ -382,7 +370,6 @@
         const finalScoreElement = document.getElementById('finalScore');
         const restartBtn = document.getElementById('restartBtn');
         const shareBtn = document.getElementById('shareBtn');
-        const saveBtn = document.getElementById('saveBtn');
         const playerNameInput = document.getElementById('playerName');
         const rankingList = document.getElementById('rankingList');
         const timerElement = document.getElementById('timer');
@@ -400,8 +387,7 @@
             
             gameOverElement.style.display = 'none';
             shareBtn.style.display = 'inline-block';
-            saveBtn.style.display = 'inline-block';
-            updateButtonsState();
+            updateShareButtonState();
         }
         
         // Gerar nova rodada (com novos locais)
@@ -671,20 +657,17 @@
             gameOverElement.style.display = 'block';
             finalScoreElement.textContent = gameState.score;
             
-            // Mostrar botões de ação
+            // Mostrar botão de compartilhar
             shareBtn.style.display = 'inline-block';
-            saveBtn.style.display = 'inline-block';
-            updateButtonsState();
+            updateShareButtonState();
             
             // Atualizar ranking
             updateRanking();
         }
         
-        // Atualizar estado dos botões
-        function updateButtonsState() {
-            const hasName = !!gameState.playerName;
-            shareBtn.disabled = !hasName;
-            saveBtn.disabled = !hasName;
+        // Atualizar estado do botão de compartilhar
+        function updateShareButtonState() {
+            shareBtn.disabled = !gameState.playerName;
         }
         
         // Atualizar ranking
@@ -760,17 +743,9 @@
             window.open(whatsappUrl, '_blank');
         });
         
-        saveBtn.addEventListener('click', () => {
-            if (!gameState.playerName) return;
-            
-            // Atualizar ranking (já é feito no endGame)
-            updateRanking();
-            alert('Pontuação salva com sucesso!');
-        });
-        
         playerNameInput.addEventListener('input', () => {
             gameState.playerName = playerNameInput.value.trim();
-            updateButtonsState();
+            updateShareButtonState();
         });
         
         // Inicializar o jogo quando a página carregar
